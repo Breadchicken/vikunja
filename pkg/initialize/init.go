@@ -37,6 +37,7 @@ import (
 	_ "code.vikunja.io/api/pkg/plugins/yaegi" // register yaegi plugin loader
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
+	ws "code.vikunja.io/api/pkg/websocket"
 )
 
 // LightInit will only init config, redis, logger but no db connection.
@@ -132,6 +133,9 @@ func FullInit() {
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 	models.RegisterAPITokenExpiryCheckCron()
+
+	// Initialize WebSocket hub
+	ws.InitHub()
 
 	// Start processing events
 	go func() {
