@@ -210,6 +210,9 @@ func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, e
 
 	u, err := user.GetUserByID(s, token.OwnerID)
 	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			return nil, nil, fmt.Errorf("API token %d owner account is disabled or locked", token.ID)
+		}
 		return nil, nil, err
 	}
 
@@ -221,7 +224,7 @@ func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, e
 // Returns 0 and an error if the token is invalid.
 func GetUserIDFromToken(tokenString string) (int64, error) {
 	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	if err != nil {
 		return 0, err
