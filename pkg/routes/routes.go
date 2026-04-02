@@ -643,6 +643,10 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/tasks/:task/timers/stop", apiv1.StopTaskTimer)
 	a.GET("/users/timers/active", apiv1.GetActiveTimer)
 
+	// Time reporting
+	a.GET("/time-report", apiv1.GetTimeReport)
+	a.GET("/time-report/csv", apiv1.ExportTimeReportCSV)
+
 	labelHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Label{}

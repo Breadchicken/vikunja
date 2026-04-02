@@ -71,6 +71,17 @@
 						{{ $t('team.title') }}
 					</RouterLink>
 				</li>
+				<li>
+					<RouterLink
+						v-shortcut="'KeyG KeyT'"
+						:to="{ name: 'time-report'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="clock" />
+						</span>
+						{{ $t('timeReport.title') }}
+					</RouterLink>
+				</li>
 			</menu>
 		</nav>
 

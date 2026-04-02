@@ -400,6 +400,11 @@ const router = createRouter({
 			component: () => import('@/views/user/OAuthAuthorize.vue'),
 		},
 		{
+			path: '/time-report',
+			name: 'time-report',
+			component: () => import('@/views/timeReport/TimeReport.vue'),
+		},
+		{
 			path: '/about',
 			name: 'about',
 			component: () => import('@/views/About.vue'),

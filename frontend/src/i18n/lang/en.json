@@ -1126,6 +1126,31 @@
       "actions": "Actions"
     }
   },
+  "timeReport": {
+    "title": "Time Report",
+    "project": "Project",
+    "allProjects": "All Projects",
+    "from": "From",
+    "to": "To",
+    "billableFilter": "Billable",
+    "all": "All",
+    "billableOnly": "Billable only",
+    "nonBillableOnly": "Non-billable only",
+    "generate": "Generate Report",
+    "totalTime": "Total Time",
+    "billableTime": "Billable Time",
+    "nonBillableTime": "Non-Billable Time",
+    "totalEntries": "Total Entries",
+    "exportCSV": "Export as CSV",
+    "taskTitle": "Task",
+    "projectName": "Project",
+    "user": "User",
+    "date": "Date",
+    "duration": "Duration",
+    "billable": "Billable",
+    "description": "Description",
+    "noEntries": "No time entries found for the selected filters."
+  },
   "team": {
     "title": "Teams",
     "noTeams": "You are currently not part of any teams.",
