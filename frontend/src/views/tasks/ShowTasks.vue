@@ -87,6 +87,7 @@
 					:key="task.id"
 					:show-project="true"
 					:the-task="task"
+					:can-mark-as-done="(task.maxPermission ?? 0) > 0"
 					@taskUpdated="updateTasks"
 				/>
 			</div>
