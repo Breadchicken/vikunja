@@ -626,6 +626,23 @@ func registerAPIRoutes(a *echo.Group) {
 		a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
 	}
 
+	// Time tracking
+	timeEntryHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskTimeEntry{}
+		},
+	}
+	a.GET("/tasks/:task/time-entries", timeEntryHandler.ReadAllWeb)
+	a.PUT("/tasks/:task/time-entries", timeEntryHandler.CreateWeb)
+	a.GET("/tasks/:task/time-entries/:timeentry", timeEntryHandler.ReadOneWeb)
+	a.POST("/tasks/:task/time-entries/:timeentry", timeEntryHandler.UpdateWeb)
+	a.DELETE("/tasks/:task/time-entries/:timeentry", timeEntryHandler.DeleteWeb)
+
+	// Timer start/stop/active
+	a.POST("/tasks/:task/timers/start", apiv1.StartTaskTimer)
+	a.POST("/tasks/:task/timers/stop", apiv1.StopTaskTimer)
+	a.GET("/users/timers/active", apiv1.GetActiveTimer)
+
 	labelHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Label{}

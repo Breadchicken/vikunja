@@ -407,6 +407,12 @@
 						</div>
 					</div>
 
+					<!-- Time Tracking -->
+					<TimeTracking
+						:task-id="taskId"
+						:can-write="canWrite"
+					/>
+
 					<!-- Comments -->
 					<Comments
 						:can-write="canWrite"
@@ -661,6 +667,7 @@ import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
+import TimeTracking from '@/components/tasks/partials/TimeTracking.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'

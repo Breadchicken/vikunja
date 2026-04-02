@@ -1098,6 +1098,32 @@
       "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
       "repeats": "Repeating tasks",
       "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+    },
+    "timeTracking": {
+      "title": "Time Tracking",
+      "start": "Start Timer",
+      "stop": "Stop Timer",
+      "started": "Timer started.",
+      "stopped": "Timer stopped and time entry saved.",
+      "entries": "Time Entries",
+      "manualEntry": "Add Manual Entry",
+      "addManualEntry": "Add time manually",
+      "hideManualEntry": "Hide manual entry",
+      "duration": "Duration",
+      "durationLabel": "Duration",
+      "durationRequired": "Please enter a duration greater than 0.",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "billable": "Billable",
+      "description": "Description",
+      "descriptionPlaceholder": "What did you work on?",
+      "save": "Save Entry",
+      "entrySaved": "Time entry saved successfully.",
+      "entryDeleted": "Time entry deleted.",
+      "total": "Total",
+      "user": "User",
+      "date": "Date",
+      "actions": "Actions"
     }
   },
   "team": {

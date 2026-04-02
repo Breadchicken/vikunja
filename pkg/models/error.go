@@ -2363,3 +2363,87 @@ func (err *ErrOAuthInvalidGrantType) HTTPError() web.HTTPError {
 		Message:  "The grant_type is not supported. Use 'authorization_code' or 'refresh_token'.",
 	}
 }
+
+// ==== Time Tracking Errors ====
+
+// ErrTaskTimeEntryDoesNotExist represents an error where the time entry does not exist
+type ErrTaskTimeEntryDoesNotExist struct {
+	ID     int64
+	TaskID int64
+}
+
+// IsErrTaskTimeEntryDoesNotExist checks if an error is ErrTaskTimeEntryDoesNotExist.
+func IsErrTaskTimeEntryDoesNotExist(err error) bool {
+	_, ok := err.(*ErrTaskTimeEntryDoesNotExist)
+	return ok
+}
+
+func (err *ErrTaskTimeEntryDoesNotExist) Error() string {
+	return fmt.Sprintf("Time entry does not exist [ID: %d, TaskID: %d]", err.ID, err.TaskID)
+}
+
+// ErrCodeTaskTimeEntryDoesNotExist holds the unique world-error code of this error
+const ErrCodeTaskTimeEntryDoesNotExist = 18001
+
+// HTTPError holds the http error description
+func (err *ErrTaskTimeEntryDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskTimeEntryDoesNotExist,
+		Message:  "The time entry does not exist.",
+	}
+}
+
+// ErrTimerAlreadyRunning represents an error where the user already has a running timer
+type ErrTimerAlreadyRunning struct {
+	TaskID int64
+}
+
+// IsErrTimerAlreadyRunning checks if an error is ErrTimerAlreadyRunning.
+func IsErrTimerAlreadyRunning(err error) bool {
+	_, ok := err.(*ErrTimerAlreadyRunning)
+	return ok
+}
+
+func (err *ErrTimerAlreadyRunning) Error() string {
+	return fmt.Sprintf("A timer is already running [TaskID: %d]", err.TaskID)
+}
+
+// ErrCodeTimerAlreadyRunning holds the unique world-error code of this error
+const ErrCodeTimerAlreadyRunning = 18002
+
+// HTTPError holds the http error description
+func (err *ErrTimerAlreadyRunning) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTimerAlreadyRunning,
+		Message:  "A timer is already running. Stop it before starting a new one.",
+	}
+}
+
+// ErrNoActiveTimer represents an error where no active timer was found
+type ErrNoActiveTimer struct {
+	TaskID int64
+}
+
+// IsErrNoActiveTimer checks if an error is ErrNoActiveTimer.
+func IsErrNoActiveTimer(err error) bool {
+	_, ok := err.(*ErrNoActiveTimer)
+	return ok
+}
+
+func (err *ErrNoActiveTimer) Error() string {
+	return fmt.Sprintf("No active timer found [TaskID: %d]", err.TaskID)
+}
+
+// ErrCodeNoActiveTimer holds the unique world-error code of this error
+const ErrCodeNoActiveTimer = 18003
+
+// HTTPError holds the http error description
+func (err *ErrNoActiveTimer) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeNoActiveTimer,
+		Message:  "No active timer found for this task.",
+	}
+}
