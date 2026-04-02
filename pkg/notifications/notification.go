@@ -18,6 +18,7 @@ package notifications
 
 import (
 	"encoding/json"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -131,6 +132,7 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
+		Created:      time.Now(),
 	}
 
 	if subject, is := notification.(SubjectID); is {
