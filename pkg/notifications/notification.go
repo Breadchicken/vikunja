@@ -20,21 +20,11 @@ import (
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/xorm"
 )
-
-// NotifyHookFunc is called after a notification is persisted to the database.
-// It receives the target user ID and the stored notification record.
-type NotifyHookFunc func(userID int64, notification *DatabaseNotification)
-
-var notifyHooks []NotifyHookFunc
-
-// RegisterNotifyHook adds a hook that is called after every DB notification insert.
-func RegisterNotifyHook(fn NotifyHookFunc) {
-	notifyHooks = append(notifyHooks, fn)
-}
 
 // Notification is a notification which can be sent via mail or db.
 type Notification interface {
@@ -137,12 +127,17 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		dbNotification.SubjectID = subject.SubjectID()
 	}
 
+	event := &NotificationCreatedEvent{
+		UserID: notifiable.RouteForDB(),
+	}
+
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)
 		if err != nil {
 			return err
 		}
-		runNotifyHooks(notifiable.RouteForDB(), dbNotification)
+		event.NotificationID = dbNotification.ID
+		events.DispatchOnCommit(existingSession, event)
 		return nil
 	}
 
@@ -160,13 +155,10 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		return err
 	}
 
-	runNotifyHooks(notifiable.RouteForDB(), dbNotification)
+	event.NotificationID = dbNotification.ID
+	if err := events.Dispatch(event); err != nil {
+		log.Errorf("Failed to dispatch notification created event: %v", err)
+	}
 
 	return nil
-}
-
-func runNotifyHooks(userID int64, notification *DatabaseNotification) {
-	for _, fn := range notifyHooks {
-		fn(userID, notification)
-	}
 }

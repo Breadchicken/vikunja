@@ -17,20 +17,60 @@
 package websocket
 
 import (
+	"encoding/json"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
+
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
-// RegisterNotifyHook registers a notification hook that pushes new
-// notifications to connected WebSocket clients.
-func RegisterNotifyHook() {
-	notifications.RegisterNotifyHook(func(userID int64, notification *notifications.DatabaseNotification) {
-		hub := GetHub()
-		if hub == nil {
-			log.Warningf("WebSocket: hub not initialized, skipping notification push")
-			return
-		}
+// NotificationListener pushes new notifications to WebSocket clients.
+type NotificationListener struct{}
 
-		hub.PublishForUser(userID, "notification.created", notification)
-	})
+// Name returns the listener name.
+func (n *NotificationListener) Name() string {
+	return "websocket.notification.push"
+}
+
+// Handle processes a notification created event, reloads the notification
+// from the database (to get accurate timestamps), and pushes it to the
+// relevant WebSocket connections.
+func (n *NotificationListener) Handle(msg *message.Message) error {
+	var event notifications.NotificationCreatedEvent
+	if err := json.Unmarshal(msg.Payload, &event); err != nil {
+		return err
+	}
+
+	hub := GetHub()
+	if hub == nil {
+		log.Warningf("WebSocket: hub not initialized, skipping notification push")
+		return nil
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	dbNotification, err := notifications.GetNotificationByID(s, event.NotificationID)
+	if err != nil {
+		log.Errorf("WebSocket: failed to load notification %d: %v", event.NotificationID, err)
+		return nil
+	}
+	if dbNotification == nil {
+		log.Warningf("WebSocket: notification %d not found, skipping push", event.NotificationID)
+		return nil
+	}
+
+	hub.PublishForUser(event.UserID, "notification.created", dbNotification)
+	return nil
+}
+
+// RegisterListeners registers WebSocket event listeners.
+func RegisterListeners() {
+	events.RegisterListener(
+		(&notifications.NotificationCreatedEvent{}).Name(),
+		&NotificationListener{},
+	)
 }

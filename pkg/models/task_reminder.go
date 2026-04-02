@@ -409,6 +409,7 @@ func RegisterReminderCron() {
 		if err := s.Commit(); err != nil {
 			log.Errorf("[Task Reminder Cron] Could not commit: %s", err)
 		}
+		events.DispatchPending(s)
 	})
 	if err != nil {
 		log.Fatalf("Could not register reminder cron: %s", err)

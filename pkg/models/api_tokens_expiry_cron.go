@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
@@ -110,6 +111,7 @@ func checkForExpiringAPITokensAt(now time.Time) {
 	if err := s.Commit(); err != nil {
 		log.Errorf(logPrefix+"Error committing session: %s", err)
 	}
+	events.DispatchPending(s)
 }
 
 // sendTokenExpiryNotificationIfNew checks whether a notification with the same

@@ -214,6 +214,7 @@ func RegisterOverdueReminderCron() {
 		if err := s.Commit(); err != nil {
 			log.Errorf("[Undone Overdue Tasks Reminder] Could not commit: %s", err)
 		}
+		events.DispatchPending(s)
 	})
 	if err != nil {
 		log.Fatalf("Could not register undone overdue tasks reminder cron: %s", err)
