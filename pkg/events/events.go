@@ -104,12 +104,12 @@ func InitEvents() (err error) {
 		return nil
 	})
 
-	// handlerTracker is a middleware that tracks in-flight handlers via the
-	// activeHandlers WaitGroup. It wraps the entire processing chain
-	// (including retries) so WaitForPendingHandlers() can drain all work.
+	// handlerTracker marks a dispatched event as handled. Dispatch() calls
+	// activeHandlers.Add(1) before publishing so WaitForPendingHandlers()
+	// sees the event immediately. This middleware calls Done() when the
+	// handler finishes.
 	handlerTracker := func(h message.HandlerFunc) message.HandlerFunc {
 		return func(msg *message.Message) ([]*message.Message, error) {
-			activeHandlers.Add(1)
 			defer activeHandlers.Done()
 			return h(msg)
 		}
@@ -166,7 +166,6 @@ func InitEventsForTesting(ctx context.Context) (<-chan struct{}, error) {
 
 	handlerTracker := func(h message.HandlerFunc) message.HandlerFunc {
 		return func(msg *message.Message) ([]*message.Message, error) {
-			activeHandlers.Add(1)
 			defer activeHandlers.Done()
 			return h(msg)
 		}
@@ -215,8 +214,17 @@ func Dispatch(event Event) error {
 		return err
 	}
 
+	// Track the message as pending before publishing so that
+	// WaitForPendingHandlers() sees it even before the Watermill router
+	// picks it up. The handlerTracker middleware calls Done() when the
+	// handler finishes.
+	activeHandlers.Add(1)
 	msg := message.NewMessage(watermill.NewUUID(), content)
-	return pubsub.Publish(event.Name(), msg)
+	if err := pubsub.Publish(event.Name(), msg); err != nil {
+		activeHandlers.Done()
+		return err
+	}
+	return nil
 }
 
 // pendingEventQueue holds the pending events and a mutex for thread-safe access
