@@ -47,6 +47,10 @@ test.describe('WebSocket Comment Notifications', () => {
 			const msg = await waitForMessage(ws, 15000)
 			expect(msg.event).toBe('notification.created')
 			expect(msg.data).toBeDefined()
+
+			// The notification payload must include a valid created timestamp (not zero)
+			const created = new Date(msg.data.created)
+			expect(created.getFullYear()).toBeGreaterThanOrEqual(2020)
 		} finally {
 			closeWs(ws)
 		}

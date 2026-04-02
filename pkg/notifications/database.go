@@ -43,6 +43,17 @@ type DatabaseNotification struct {
 	Created time.Time `xorm:"created not null" json:"created"`
 }
 
+// BeforeInsert is called by XORM before inserting a new row. We set Created
+// here because XORM's "created" tag only updates the in-memory struct via
+// afterClosures which run on Commit(). When using a transactional session,
+// any code that reads the struct between Insert() and Commit() (e.g. the
+// WebSocket notify hooks) would see a zero timestamp without this.
+func (d *DatabaseNotification) BeforeInsert() {
+	if d.Created.IsZero() {
+		d.Created = time.Now()
+	}
+}
+
 // TableName resolves to a better table name for notifications
 func (d *DatabaseNotification) TableName() string {
 	return "notifications"
