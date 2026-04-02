@@ -287,7 +287,9 @@ async function loadReport() {
 	try {
 		const params = buildQueryParams()
 		const response = await http.get(`/time-report?${params.toString()}`)
-		report.value = response.data
+		const data = response.data
+		data.entries = data.entries || []
+		report.value = data
 	} catch (e) {
 		error(e)
 	} finally {

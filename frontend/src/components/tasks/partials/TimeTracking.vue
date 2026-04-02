@@ -251,7 +251,7 @@ function stopTicking() {
 async function loadEntries() {
 	try {
 		const entries = await timeEntryService.getAll({taskId: props.taskId})
-		timeEntries.value = entries
+		timeEntries.value = entries || []
 	} catch (e) {
 		error(e)
 	}
