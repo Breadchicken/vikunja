@@ -82,6 +82,11 @@ func SetEngine() (err error) {
 		return
 	}
 
+	// Ensure the task_time_entries table exists (migration may not create it with all drivers)
+	if err = x.Sync2(new(TaskTimeEntry)); err != nil {
+		log.Errorf("Could not sync task_time_entries table: %v", err)
+	}
+
 	return nil
 }
 

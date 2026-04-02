@@ -45,10 +45,27 @@ func init() {
 		ID:          "20260402143643",
 		Description: "add task_time_entries table for time tracking",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(taskTimeEntries20260402143643{})
+			_, err := tx.Exec(`CREATE TABLE IF NOT EXISTS task_time_entries (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				task_id INTEGER NOT NULL,
+				user_id INTEGER NOT NULL,
+				start DATETIME NOT NULL,
+				"end" DATETIME NULL,
+				duration INTEGER NULL,
+				billable INTEGER DEFAULT 1,
+				description TEXT NULL,
+				created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)`)
+			if err != nil {
+				return err
+			}
+			_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS IDX_task_time_entries_task_id ON task_time_entries (task_id)`)
+			return err
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			return tx.DropTables(taskTimeEntries20260402143643{})
+			_, err := tx.Exec(`DROP TABLE IF EXISTS task_time_entries`)
+			return err
 		},
 	})
 }

@@ -91,7 +91,7 @@
 							{{ $t('timeReport.totalTime') }}
 						</p>
 						<p class="title">
-							{{ formatDuration(report.totalDuration) }}
+							{{ formatDuration(report.total_duration) }}
 						</p>
 					</div>
 				</div>
@@ -103,7 +103,7 @@
 							{{ $t('timeReport.billableTime') }}
 						</p>
 						<p class="title has-text-success">
-							{{ formatDuration(report.billableDuration) }}
+							{{ formatDuration(report.billable_duration) }}
 						</p>
 					</div>
 				</div>
@@ -115,7 +115,7 @@
 							{{ $t('timeReport.nonBillableTime') }}
 						</p>
 						<p class="title has-text-grey">
-							{{ formatDuration(report.totalDuration - report.billableDuration) }}
+							{{ formatDuration(report.total_duration - report.billable_duration) }}
 						</p>
 					</div>
 				</div>
@@ -127,7 +127,7 @@
 							{{ $t('timeReport.totalEntries') }}
 						</p>
 						<p class="title">
-							{{ report.totalEntries }}
+							{{ report.total_entries }}
 						</p>
 					</div>
 				</div>
@@ -168,14 +168,14 @@
 				<tbody>
 					<tr
 						v-for="entry in report.entries"
-						:key="entry.timeEntryId"
+						:key="entry.time_entry_id"
 					>
 						<td>
-							<RouterLink :to="{ name: 'task.detail', params: { id: entry.taskId } }">
-								{{ entry.taskTitle }}
+							<RouterLink :to="{ name: 'task.detail', params: { id: entry.task_id } }">
+								{{ entry.task_title }}
 							</RouterLink>
 						</td>
-						<td>{{ entry.projectName }}</td>
+						<td>{{ entry.project_name }}</td>
 						<td>{{ entry.username }}</td>
 						<td>{{ formatDate(entry.start) }}</td>
 						<td>{{ formatDuration(entry.duration) }}</td>
@@ -218,12 +218,12 @@ const projectStore = useProjectStore()
 const http = AuthenticatedHTTPFactory()
 
 interface TimeReportEntryData {
-	timeEntryId: number
-	taskId: number
-	taskTitle: string
-	projectId: number
-	projectName: string
-	userId: number
+	time_entry_id: number
+	task_id: number
+	task_title: string
+	project_id: number
+	project_name: string
+	user_id: number
 	username: string
 	start: string
 	end: string
@@ -234,9 +234,9 @@ interface TimeReportEntryData {
 
 interface TimeReportData {
 	entries: TimeReportEntryData[]
-	totalDuration: number
-	billableDuration: number
-	totalEntries: number
+	total_duration: number
+	billable_duration: number
+	total_entries: number
 }
 
 const filters = reactive({
