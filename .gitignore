@@ -54,3 +54,7 @@ PLAN.md
 plans/
 /.crush/
 /.playwright-mcp
+vikunja.exe
+vikunja.db
+config.yml
+frontend/.env.local

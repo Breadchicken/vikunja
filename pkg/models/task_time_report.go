@@ -19,6 +19,7 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
@@ -64,7 +65,15 @@ func GetTimeReportEntries(s *xorm.Session, a web.Auth, projectID, filterUserID i
 		conds = append(conds, builder.Eq{"t.project_id": projectID})
 	} else {
 		// Get all projects the user can access
-		allProjects, err := getAllProjectsForUser(s, a)
+		u, err := user.GetUserByID(s, a.GetID())
+		if err != nil {
+			return nil, err
+		}
+		allProjects, _, err := getAllProjectsForUser(s, a.GetID(), &projectOptions{
+			user:    u,
+			page:    0,
+			perPage: 0,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -115,18 +124,4 @@ func GetTimeReportEntries(s *xorm.Session, a web.Auth, projectID, filterUserID i
 	return entries, nil
 }
 
-// getAllProjectsForUser returns all projects the user has at least read access to.
-func getAllProjectsForUser(s *xorm.Session, a web.Auth) ([]*Project, error) {
-	projects := []*Project{}
-	p := &Project{}
-	result, _, _, err := p.ReadAll(s, a, "", 1, 1000)
-	if err != nil {
-		return nil, err
-	}
 
-	if projectsSlice, ok := result.([]*Project); ok {
-		projects = projectsSlice
-	}
-
-	return projects, nil
-}

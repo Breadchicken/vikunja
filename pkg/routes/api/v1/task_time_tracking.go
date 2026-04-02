@@ -42,7 +42,7 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/timers/start [post]
 func StartTaskTimer(c *echo.Context) error {
-	taskID, err := strconv.ParseInt(c.PathParam("task"), 10, 64)
+	taskID, err := strconv.ParseInt(c.Param("task"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID")
 	}
@@ -98,7 +98,7 @@ func StartTaskTimer(c *echo.Context) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/timers/stop [post]
 func StopTaskTimer(c *echo.Context) error {
-	taskID, err := strconv.ParseInt(c.PathParam("task"), 10, 64)
+	taskID, err := strconv.ParseInt(c.Param("task"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID")
 	}

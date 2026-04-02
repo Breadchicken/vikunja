@@ -30,28 +30,12 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// TimeReportEntry represents a single row in the time report
-type TimeReportEntry struct {
-	TimeEntryID int64     `json:"time_entry_id"`
-	TaskID      int64     `json:"task_id"`
-	TaskTitle   string    `json:"task_title"`
-	ProjectID   int64     `json:"project_id"`
-	ProjectName string    `json:"project_name"`
-	UserID      int64     `json:"user_id"`
-	Username    string    `json:"username"`
-	Start       time.Time `json:"start"`
-	End         time.Time `json:"end"`
-	Duration    int64     `json:"duration"`
-	Billable    bool      `json:"billable"`
-	Description string    `json:"description"`
-}
-
 // TimeReportSummary provides aggregated data for the time report
 type TimeReportSummary struct {
-	Entries          []*TimeReportEntry `json:"entries"`
-	TotalDuration    int64              `json:"total_duration"`
-	BillableDuration int64              `json:"billable_duration"`
-	TotalEntries     int64              `json:"total_entries"`
+	Entries          []*models.TimeReportEntry `json:"entries"`
+	TotalDuration    int64                     `json:"total_duration"`
+	BillableDuration int64                     `json:"billable_duration"`
+	TotalEntries     int64                     `json:"total_entries"`
 }
 
 // GetTimeReport returns a time report for a specific project or globally
@@ -207,7 +191,7 @@ func ExportTimeReportCSV(c *echo.Context) error {
 	c.Response().Header().Set("Content-Disposition", "attachment; filename=time-report.csv")
 	c.Response().WriteHeader(http.StatusOK)
 
-	w := csv.NewWriter(c.Response().Writer)
+	w := csv.NewWriter(c.Response())
 
 	// Write header
 	err = w.Write([]string{

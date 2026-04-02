@@ -77,7 +77,7 @@
 						:to="{ name: 'time-report'}"
 					>
 						<span class="menu-item-icon icon">
-							<Icon icon="clock" />
+							<Icon :icon="['far', 'clock']" />
 						</span>
 						{{ $t('timeReport.title') }}
 					</RouterLink>

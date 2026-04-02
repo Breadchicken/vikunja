@@ -45,7 +45,7 @@ func init() {
 		ID:          "20260402143643",
 		Description: "add task_time_entries table for time tracking",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(taskTimeEntries20260402143643{})
+			return tx.Sync2(taskTimeEntries20260402143643{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(taskTimeEntries20260402143643{})

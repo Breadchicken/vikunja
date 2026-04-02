@@ -121,7 +121,7 @@ func (te *TaskTimeEntry) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 	if !exists {
-		return ErrTaskTimeEntryDoesNotExist{ID: te.ID, TaskID: te.TaskID}
+		return &ErrTaskTimeEntryDoesNotExist{ID: te.ID, TaskID: te.TaskID}
 	}
 
 	*te = *entry
@@ -206,7 +206,7 @@ func (te *TaskTimeEntry) Update(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 	if !exists {
-		return ErrTaskTimeEntryDoesNotExist{ID: te.ID, TaskID: te.TaskID}
+		return &ErrTaskTimeEntryDoesNotExist{ID: te.ID, TaskID: te.TaskID}
 	}
 
 	// Recompute duration if end is set
@@ -246,7 +246,7 @@ func (te *TaskTimeEntry) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 	if !exists {
-		return ErrTaskTimeEntryDoesNotExist{ID: te.ID, TaskID: te.TaskID}
+		return &ErrTaskTimeEntryDoesNotExist{ID: te.ID, TaskID: te.TaskID}
 	}
 
 	_, err = s.Where("id = ?", te.ID).Delete(&TaskTimeEntry{})
@@ -268,7 +268,7 @@ func StartTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry
 		return nil, err
 	}
 	if exists {
-		return nil, ErrTimerAlreadyRunning{TaskID: running.TaskID}
+		return nil, &ErrTimerAlreadyRunning{TaskID: running.TaskID}
 	}
 
 	entry = &TaskTimeEntry{
@@ -295,7 +295,7 @@ func StopTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry,
 		return nil, err
 	}
 	if !exists {
-		return nil, ErrNoActiveTimer{TaskID: taskID}
+		return nil, &ErrNoActiveTimer{TaskID: taskID}
 	}
 
 	now := time.Now()

@@ -1,7 +1,7 @@
 <template>
 	<div class="content details time-tracking-container">
 		<h3>
-			<Icon icon="clock" />
+			<Icon :icon="['far', 'clock']" />
 			{{ $t('task.timeTracking.title') }}
 		</h3>
 
