@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/xorm"
@@ -127,18 +126,9 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		dbNotification.SubjectID = subject.SubjectID()
 	}
 
-	event := &NotificationCreatedEvent{
-		UserID: notifiable.RouteForDB(),
-	}
-
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)
-		if err != nil {
-			return err
-		}
-		event.NotificationID = dbNotification.ID
-		events.DispatchOnCommit(existingSession, event)
-		return nil
+		return err
 	}
 
 	s := db.NewSession()
@@ -150,15 +140,5 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		return err
 	}
 
-	err = s.Commit()
-	if err != nil {
-		return err
-	}
-
-	event.NotificationID = dbNotification.ID
-	if err := events.Dispatch(event); err != nil {
-		log.Errorf("Failed to dispatch notification created event: %v", err)
-	}
-
-	return nil
+	return s.Commit()
 }

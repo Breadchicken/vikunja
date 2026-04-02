@@ -19,6 +19,9 @@ package notifications
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
+
 	"xorm.io/xorm"
 )
 
@@ -41,6 +44,18 @@ type DatabaseNotification struct {
 
 	// A timestamp when this notification was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
+}
+
+// AfterInsert is called by XORM after the row is inserted. For transactional
+// sessions this runs during Commit(), guaranteeing the row is persisted before
+// the event fires.
+func (d *DatabaseNotification) AfterInsert() {
+	if err := events.Dispatch(&NotificationCreatedEvent{
+		NotificationID: d.ID,
+		UserID:         d.NotifiableID,
+	}); err != nil {
+		log.Errorf("Failed to dispatch notification created event for notification %d: %v", d.ID, err)
+	}
 }
 
 // TableName resolves to a better table name for notifications
