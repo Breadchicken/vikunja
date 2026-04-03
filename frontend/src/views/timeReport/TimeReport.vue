@@ -215,7 +215,6 @@ import {useProjectStore} from '@/stores/projects'
 
 const {t} = useI18n()
 const projectStore = useProjectStore()
-const http = AuthenticatedHTTPFactory()
 
 interface TimeReportEntryData {
 	time_entry_id: number
@@ -286,6 +285,7 @@ async function loadReport() {
 	isLoading.value = true
 	try {
 		const params = buildQueryParams()
+		const http = AuthenticatedHTTPFactory()
 		const response = await http.get(`/time-report?${params.toString()}`)
 		const data = response.data
 		data.entries = data.entries || []
@@ -297,11 +297,23 @@ async function loadReport() {
 	}
 }
 
-function exportCSV() {
-	const params = buildQueryParams()
-	const token = localStorage.getItem('token')
-	const url = `${window.API_URL}/time-report/csv?${params.toString()}&token=${token}`
-	window.open(url, '_blank')
+async function exportCSV() {
+	try {
+		const params = buildQueryParams()
+		const http = AuthenticatedHTTPFactory()
+		const response = await http.get(`/time-report/csv?${params.toString()}`, {
+			responseType: 'blob',
+		})
+		const blob = new Blob([response.data], {type: 'text/csv'})
+		const url = window.URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = 'time-report.csv'
+		a.click()
+		window.URL.revokeObjectURL(url)
+	} catch (e) {
+		error(e)
+	}
 }
 
 onMounted(async () => {
