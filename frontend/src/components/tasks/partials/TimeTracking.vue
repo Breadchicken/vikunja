@@ -32,15 +32,39 @@
 			</div>
 		</div>
 
+		<!-- Timer options (shown when timer is running or before start) -->
+		<div class="timer-options">
+			<div class="field is-grouped">
+				<div class="control">
+					<label class="checkbox">
+						<input
+							v-model="timerBillable"
+							type="checkbox"
+						>
+						{{ $t('task.timeTracking.billable') }}
+					</label>
+				</div>
+				<div class="control is-expanded">
+					<input
+						v-model="timerDescription"
+						type="text"
+						class="input is-small"
+						:placeholder="$t('task.timeTracking.descriptionPlaceholder')"
+						@keyup.enter="!isRunning ? start() : undefined"
+					>
+				</div>
+			</div>
+		</div>
+
 		<!-- Manual entry form -->
 		<div
 			v-if="showManualEntry"
-			class="manual-entry"
+			class="manual-entry mt-3"
 		>
 			<h4>{{ $t('task.timeTracking.manualEntry') }}</h4>
 			<div class="field is-grouped">
 				<div class="control">
-					<label class="label">{{ $t('task.timeTracking.duration') }}</label>
+					<label class="label">{{ $t('task.timeTracking.hours') }}</label>
 					<input
 						v-model="manualHours"
 						type="number"
@@ -50,7 +74,7 @@
 					>
 				</div>
 				<div class="control">
-					<label class="label">&nbsp;</label>
+					<label class="label">{{ $t('task.timeTracking.minutes') }}</label>
 					<input
 						v-model="manualMinutes"
 						type="number"
@@ -61,7 +85,19 @@
 					>
 				</div>
 				<div class="control">
-					<label class="label">&nbsp;</label>
+					<label class="label">{{ $t('task.timeTracking.seconds') }}</label>
+					<input
+						v-model="manualSeconds"
+						type="number"
+						min="0"
+						max="59"
+						class="input is-small"
+						:placeholder="$t('task.timeTracking.seconds')"
+					>
+				</div>
+			</div>
+			<div class="field is-grouped">
+				<div class="control">
 					<label class="checkbox">
 						<input
 							v-model="manualBillable"
@@ -125,24 +161,102 @@
 					>
 						<td>{{ entry.user?.name || entry.user?.username }}</td>
 						<td>{{ formatDate(entry.start) }}</td>
-						<td>{{ formatDuration(entry.duration) }}</td>
 						<td>
-							<Icon
-								:icon="entry.billable ? 'check' : 'times'"
-								:class="entry.billable ? 'has-text-success' : 'has-text-grey'"
-							/>
+							<!-- Inline edit duration -->
+							<template v-if="editingEntryId === entry.id">
+								<div class="field is-grouped is-grouped-multiline">
+									<input
+										v-model.number="editHours"
+										type="number"
+										min="0"
+										class="input is-small edit-duration-input"
+									>
+									<span>h</span>
+									<input
+										v-model.number="editMinutes"
+										type="number"
+										min="0"
+										max="59"
+										class="input is-small edit-duration-input"
+									>
+									<span>m</span>
+									<input
+										v-model.number="editSeconds"
+										type="number"
+										min="0"
+										max="59"
+										class="input is-small edit-duration-input"
+									>
+									<span>s</span>
+								</div>
+							</template>
+							<template v-else>
+								{{ formatDuration(entry.duration) }}
+							</template>
 						</td>
-						<td>{{ entry.description }}</td>
+						<td>
+							<!-- Inline edit billable -->
+							<template v-if="editingEntryId === entry.id">
+								<label class="checkbox">
+									<input
+										v-model="editBillable"
+										type="checkbox"
+									>
+								</label>
+							</template>
+							<template v-else>
+								<Icon
+									:icon="entry.billable ? 'check' : 'times'"
+									:class="entry.billable ? 'has-text-success' : 'has-text-grey'"
+								/>
+							</template>
+						</td>
+						<td>
+							<!-- Inline edit description -->
+							<template v-if="editingEntryId === entry.id">
+								<input
+									v-model="editDescription"
+									type="text"
+									class="input is-small"
+								>
+							</template>
+							<template v-else>
+								{{ entry.description }}
+							</template>
+						</td>
 						<td
 							v-if="canWrite"
-							class="has-text-right"
+							class="has-text-right actions-cell"
 						>
-							<BaseButton
-								class="is-danger is-small"
-								@click="deleteEntry(entry)"
-							>
-								<Icon icon="trash" />
-							</BaseButton>
+							<template v-if="editingEntryId === entry.id">
+								<BaseButton
+									class="is-primary is-small mr-1"
+									:loading="isSavingEdit"
+									@click="saveEdit(entry)"
+								>
+									<Icon icon="check" />
+								</BaseButton>
+								<BaseButton
+									class="is-small"
+									@click="cancelEdit"
+								>
+									<Icon icon="times" />
+								</BaseButton>
+							</template>
+							<template v-else>
+								<BaseButton
+									class="is-small mr-1"
+									@click="startEdit(entry)"
+								>
+									<Icon icon="pen" />
+								</BaseButton>
+								<BaseButton
+									class="is-danger is-small"
+									@click="deleteEntry(entry)"
+								>
+									<Icon icon="trash" />
+								</BaseButton>
+							</template>
 						</td>
 					</tr>
 				</tbody>
@@ -196,11 +310,25 @@ const isStopping = ref(false)
 const isSavingManual = ref(false)
 const showManualEntry = ref(false)
 
+// Timer options (billable + description available when starting)
+const timerBillable = ref(true)
+const timerDescription = ref('')
+
 // Manual entry fields
 const manualHours = ref(0)
 const manualMinutes = ref(0)
+const manualSeconds = ref(0)
 const manualBillable = ref(true)
 const manualDescription = ref('')
+
+// Inline edit state
+const editingEntryId = ref<number | null>(null)
+const editHours = ref(0)
+const editMinutes = ref(0)
+const editSeconds = ref(0)
+const editBillable = ref(true)
+const editDescription = ref('')
+const isSavingEdit = ref(false)
 
 let timerInterval: ReturnType<typeof setInterval> | null = null
 
@@ -220,10 +348,11 @@ const billableDuration = computed(() => {
 })
 
 function formatDuration(seconds: number): string {
-	if (!seconds || seconds <= 0) return '0h 0m'
+	if (!seconds || seconds <= 0) return '0h 0m 0s'
 	const h = Math.floor(seconds / 3600)
 	const m = Math.floor((seconds % 3600) / 60)
-	return `${h}h ${m}m`
+	const s = seconds % 60
+	return `${h}h ${m}m ${s}s`
 }
 
 function formatDate(date: Date): string {
@@ -254,7 +383,7 @@ async function loadEntries() {
 		const entries = await timeEntryService.getAll({taskId: props.taskId})
 		timeEntries.value = entries || []
 	} catch {
-		// Silently fail on load – entries will show once available
+		// Silently fail on load
 	}
 }
 
@@ -265,21 +394,23 @@ async function checkActiveTimer() {
 		if (timer && timer.taskId === props.taskId) {
 			activeEntry.value = timer
 			isRunning.value = true
+			timerBillable.value = timer.billable
+			timerDescription.value = timer.description || ''
 			startTicking()
 		} else {
 			isRunning.value = false
 			activeEntry.value = null
 			stopTicking()
 		}
-	} catch (e) {
-		// Silently fail – user may not have an active timer
+	} catch {
+		// Silently fail
 	}
 }
 
 async function start() {
 	isStarting.value = true
 	try {
-		const entry = await startTimer(props.taskId)
+		const entry = await startTimer(props.taskId, timerBillable.value, timerDescription.value)
 		activeEntry.value = entry
 		isRunning.value = true
 		startTicking()
@@ -294,10 +425,12 @@ async function start() {
 async function stop() {
 	isStopping.value = true
 	try {
-		await stopTimer(props.taskId)
+		await stopTimer(props.taskId, timerBillable.value, timerDescription.value)
 		isRunning.value = false
 		activeEntry.value = null
 		stopTicking()
+		timerDescription.value = ''
+		timerBillable.value = true
 		await loadEntries()
 		success({message: t('task.timeTracking.stopped')})
 	} catch (e) {
@@ -308,8 +441,8 @@ async function stop() {
 }
 
 async function saveManualEntry() {
-	const totalSeconds = (manualHours.value * 3600) + (manualMinutes.value * 60)
-	if (totalSeconds <= 0) {
+	const totalSecs = (manualHours.value * 3600) + (manualMinutes.value * 60) + manualSeconds.value
+	if (totalSecs <= 0) {
 		error({message: t('task.timeTracking.durationRequired')})
 		return
 	}
@@ -317,12 +450,12 @@ async function saveManualEntry() {
 	isSavingManual.value = true
 	try {
 		const now = new Date()
-		const start = new Date(now.getTime() - totalSeconds * 1000)
+		const startDate = new Date(now.getTime() - totalSecs * 1000)
 		const entry = new TimeEntryModel({
 			taskId: props.taskId,
-			start,
+			start: startDate,
 			end: now,
-			duration: totalSeconds,
+			duration: totalSecs,
 			billable: manualBillable.value,
 			description: manualDescription.value,
 		})
@@ -330,9 +463,9 @@ async function saveManualEntry() {
 		await timeEntryService.create(entry)
 		await loadEntries()
 
-		// Reset form
 		manualHours.value = 0
 		manualMinutes.value = 0
+		manualSeconds.value = 0
 		manualBillable.value = true
 		manualDescription.value = ''
 		showManualEntry.value = false
@@ -342,6 +475,50 @@ async function saveManualEntry() {
 		error(e)
 	} finally {
 		isSavingManual.value = false
+	}
+}
+
+// Inline editing
+function startEdit(entry: ITimeEntry) {
+	editingEntryId.value = entry.id
+	const dur = entry.duration || 0
+	editHours.value = Math.floor(dur / 3600)
+	editMinutes.value = Math.floor((dur % 3600) / 60)
+	editSeconds.value = dur % 60
+	editBillable.value = entry.billable
+	editDescription.value = entry.description || ''
+}
+
+function cancelEdit() {
+	editingEntryId.value = null
+}
+
+async function saveEdit(entry: ITimeEntry) {
+	isSavingEdit.value = true
+	try {
+		const newDuration = (editHours.value * 3600) + (editMinutes.value * 60) + editSeconds.value
+		const startDate = new Date(entry.start)
+		const endDate = new Date(startDate.getTime() + newDuration * 1000)
+
+		const updated = new TimeEntryModel({
+			...entry,
+			id: entry.id,
+			taskId: props.taskId,
+			start: startDate,
+			end: endDate,
+			duration: newDuration,
+			billable: editBillable.value,
+			description: editDescription.value,
+		})
+
+		await timeEntryService.update(updated)
+		editingEntryId.value = null
+		await loadEntries()
+		success({message: t('task.timeTracking.entryUpdated')})
+	} catch (e) {
+		error(e)
+	} finally {
+		isSavingEdit.value = false
 	}
 }
 
@@ -379,7 +556,7 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
-	margin-bottom: 1rem;
+	margin-bottom: 0.5rem;
 }
 
 .timer-display {
@@ -392,11 +569,19 @@ onUnmounted(() => {
 	font-family: monospace;
 }
 
+.timer-options {
+	margin-bottom: 1rem;
+
+	.field.is-grouped {
+		gap: 0.75rem;
+		align-items: center;
+	}
+}
+
 .manual-entry {
 	padding: 1rem;
 	background: var(--grey-100);
 	border-radius: 0.5rem;
-	margin-top: 0.5rem;
 
 	.field.is-grouped {
 		gap: 0.5rem;
@@ -408,5 +593,13 @@ onUnmounted(() => {
 	table {
 		font-size: 0.9rem;
 	}
+}
+
+.edit-duration-input {
+	width: 4rem !important;
+}
+
+.actions-cell {
+	white-space: nowrap;
 }
 </style>

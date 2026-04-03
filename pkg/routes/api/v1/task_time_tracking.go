@@ -47,6 +47,18 @@ func StartTaskTimer(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID")
 	}
 
+	// Parse optional body params
+	var body struct {
+		Billable    *bool  `json:"billable"`
+		Description string `json:"description"`
+	}
+	_ = c.Bind(&body)
+
+	billable := true
+	if body.Billable != nil {
+		billable = *body.Billable
+	}
+
 	currentAuth, err := auth.GetAuthFromClaims(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
@@ -71,7 +83,7 @@ func StartTaskTimer(c *echo.Context) error {
 		return err
 	}
 
-	entry, err := models.StartTimer(s, taskID, currentAuth)
+	entry, err := models.StartTimer(s, taskID, currentAuth, billable, body.Description)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -103,6 +115,13 @@ func StopTaskTimer(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid task ID")
 	}
 
+	// Parse optional body params to update billable/description on stop
+	var body struct {
+		Billable    *bool  `json:"billable"`
+		Description string `json:"description"`
+	}
+	_ = c.Bind(&body)
+
 	currentAuth, err := auth.GetAuthFromClaims(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
@@ -115,7 +134,7 @@ func StopTaskTimer(c *echo.Context) error {
 		return err
 	}
 
-	entry, err := models.StopTimer(s, taskID, currentAuth)
+	entry, err := models.StopTimer(s, taskID, currentAuth, body.Billable, body.Description)
 	if err != nil {
 		_ = s.Rollback()
 		return err

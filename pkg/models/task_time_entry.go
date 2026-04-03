@@ -254,7 +254,7 @@ func (te *TaskTimeEntry) Delete(s *xorm.Session, _ web.Auth) (err error) {
 }
 
 // StartTimer starts a new timer for the current user on the given task
-func StartTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry, err error) {
+func StartTimer(s *xorm.Session, taskID int64, a web.Auth, billable bool, description string) (entry *TaskTimeEntry, err error) {
 	// Check if the task exists
 	_, err = GetTaskSimple(s, &Task{ID: taskID})
 	if err != nil {
@@ -272,10 +272,11 @@ func StartTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry
 	}
 
 	entry = &TaskTimeEntry{
-		TaskID:   taskID,
-		UserID:   a.GetID(),
-		Start:    time.Now(),
-		Billable: true,
+		TaskID:      taskID,
+		UserID:      a.GetID(),
+		Start:       time.Now(),
+		Billable:    billable,
+		Description: description,
 	}
 
 	_, err = s.Insert(entry)
@@ -288,7 +289,7 @@ func StartTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry
 }
 
 // StopTimer stops the running timer for the current user
-func StopTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry, err error) {
+func StopTimer(s *xorm.Session, taskID int64, a web.Auth, billable *bool, description string) (entry *TaskTimeEntry, err error) {
 	entry = &TaskTimeEntry{}
 	exists, err := s.Where("user_id = ? AND task_id = ? AND `end` IS NULL", a.GetID(), taskID).Get(entry)
 	if err != nil {
@@ -302,8 +303,16 @@ func StopTimer(s *xorm.Session, taskID int64, a web.Auth) (entry *TaskTimeEntry,
 	entry.End = now
 	entry.Duration = int64(now.Sub(entry.Start).Seconds())
 
+	// Update billable and description if provided
+	if billable != nil {
+		entry.Billable = *billable
+	}
+	if description != "" {
+		entry.Description = description
+	}
+
 	_, err = s.Where("id = ?", entry.ID).
-		Cols("end", "duration").
+		Cols("end", "duration", "billable", "description").
 		Update(entry)
 	if err != nil {
 		return nil, err
