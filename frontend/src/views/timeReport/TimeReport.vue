@@ -1,5 +1,8 @@
 <template>
-	<div class="content time-report">
+	<div
+		class="content loader-container is-max-width-desktop time-report"
+		:class="{ 'is-loading': isLoading }"
+	>
 		<h1>{{ $t('timeReport.title') }}</h1>
 
 		<!-- Filters -->
@@ -66,14 +69,13 @@
 						</div>
 					</div>
 					<div class="column is-narrow is-flex is-align-items-flex-end">
-						<BaseButton
-							class="button is-primary"
+						<XButton
 							:loading="isLoading"
+							icon="search"
 							@click="loadReport"
 						>
-							<Icon icon="search" />
 							{{ $t('timeReport.generate') }}
-						</BaseButton>
+						</XButton>
 					</div>
 				</div>
 			</div>
@@ -139,19 +141,19 @@
 			v-if="report && report.entries.length > 0"
 			class="mt-4 mb-4"
 		>
-			<BaseButton
-				class="button is-outlined"
+			<XButton
+				variant="secondary"
+				icon="download"
 				@click="exportCSV"
 			>
-				<Icon icon="download" />
 				{{ $t('timeReport.exportCSV') }}
-			</BaseButton>
+			</XButton>
 		</div>
 
 		<!-- Entries table -->
 		<div
 			v-if="report && report.entries.length > 0"
-			class="mt-4"
+			class="table-container mt-4"
 		>
 			<table class="table is-striped is-fullwidth is-hoverable">
 				<thead>
@@ -211,13 +213,14 @@
 import {ref, reactive, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import BaseButton from '@/components/base/BaseButton.vue'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import {formatDateShort} from '@/helpers/time/formatDate'
 import {error} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import {useTitle} from '@/composables/useTitle'
 
 const {t} = useI18n()
+useTitle(() => t('timeReport.title'))
 const projectStore = useProjectStore()
 
 interface TimeReportEntryData {
@@ -332,12 +335,6 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.time-report {
-	max-width: 1200px;
-	margin: 0 auto;
-	padding: 1rem;
-}
-
 .summary-cards .card {
 	.heading {
 		font-size: 0.85rem;
