@@ -171,9 +171,13 @@
 						:key="entry.time_entry_id"
 					>
 						<td>
-							<RouterLink :to="{ name: 'task.detail', params: { id: entry.task_id } }">
+							<RouterLink
+								v-if="entry.task_id"
+								:to="{ name: 'task.detail', params: { id: entry.task_id } }"
+							>
 								{{ entry.task_title }}
 							</RouterLink>
+							<span v-else>{{ entry.task_title }}</span>
 						</td>
 						<td>{{ entry.project_name }}</td>
 						<td>{{ entry.username }}</td>

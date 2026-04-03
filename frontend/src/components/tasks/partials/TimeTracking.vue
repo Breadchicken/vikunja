@@ -1,7 +1,7 @@
 <template>
 	<div class="content details time-tracking-container">
 		<h3>
-			<Icon icon="history" />
+			<Icon icon="stopwatch" />
 			{{ $t('task.timeTracking.title') }}
 		</h3>
 
@@ -249,15 +249,17 @@ function stopTicking() {
 }
 
 async function loadEntries() {
+	if (!props.taskId) return
 	try {
 		const entries = await timeEntryService.getAll({taskId: props.taskId})
 		timeEntries.value = entries || []
-	} catch (e) {
-		error(e)
+	} catch {
+		// Silently fail on load – entries will show once available
 	}
 }
 
 async function checkActiveTimer() {
+	if (!props.taskId) return
 	try {
 		const timer = await getActiveTimer()
 		if (timer && timer.taskId === props.taskId) {

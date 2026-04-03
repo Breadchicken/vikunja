@@ -82,6 +82,7 @@ import {
 	faParagraph,
 	faTable,
 	faX, faArrowTurnDown, faListCheck, faXmark, faXmarksLines, faFont, faRulerHorizontal, faUnderline,
+	faStopwatch,
 } from '@fortawesome/free-solid-svg-icons'
 import {
 	faBellSlash,
@@ -151,6 +152,7 @@ library.add(faForward)
 library.add(faGripLines)
 library.add(faHeader)
 library.add(faHistory)
+library.add(faStopwatch)
 library.add(faImage)
 library.add(faKeyboard)
 library.add(faLayerGroup)
