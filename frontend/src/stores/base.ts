@@ -162,6 +162,11 @@ export const useBaseStore = defineStore('base', () => {
 
 			await checkAndSetApiUrl(window.API_URL)
 			await authStore.checkAuth()
+			if (authStore.authenticated) {
+				const {useTimerStore} = await import('@/stores/timer')
+				const timerStore = useTimerStore()
+				timerStore.fetchActiveTimer()
+			}
 			await router.isReady()
 			ready.value = true
 		} catch (e: unknown) {

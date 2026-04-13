@@ -1125,7 +1125,8 @@
       "total": "Total",
       "user": "User",
       "date": "Date",
-      "actions": "Actions"
+      "actions": "Actions",
+      "headerTimer": "Running timer — click to go to task"
     }
   },
   "timeReport": {

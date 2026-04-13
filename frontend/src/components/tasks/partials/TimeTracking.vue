@@ -8,13 +8,14 @@
 		<!-- Timer controls -->
 		<div class="timer-controls">
 			<div class="timer-display">
-				<span class="timer-time">{{ formattedElapsed }}</span>
+				<span class="timer-time">{{ isThisTaskRunning ? timerStore.formattedElapsed : '00:00:00' }}</span>
 			</div>
 			<div class="timer-buttons">
 				<BaseButton
-					v-if="!isRunning"
+					v-if="!isThisTaskRunning"
 					class="button is-primary"
 					:loading="isStarting"
+					:disabled="timerStore.isRunning && !isThisTaskRunning"
 					@click="start"
 				>
 					<Icon icon="play" />
@@ -281,17 +282,17 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
+import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import TimeEntryService from '@/services/timeEntry'
 import TimeEntryModel from '@/models/timeEntry'
-import {startTimer, stopTimer, getActiveTimer} from '@/services/timerApi'
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 import type {ITask} from '@/modelTypes/ITask'
 import {error, success} from '@/message'
 import {formatDateShort} from '@/helpers/time/formatDate'
+import {useTimerStore} from '@/stores/timer'
 
 const props = defineProps<{
 	taskId: ITask['id']
@@ -299,12 +300,10 @@ const props = defineProps<{
 }>()
 
 const {t} = useI18n()
+const timerStore = useTimerStore()
 
 const timeEntryService = new TimeEntryService()
 const timeEntries = ref<ITimeEntry[]>([])
-const isRunning = ref(false)
-const activeEntry = ref<ITimeEntry | null>(null)
-const elapsedSeconds = ref(0)
 const isStarting = ref(false)
 const isStopping = ref(false)
 const isSavingManual = ref(false)
@@ -330,14 +329,9 @@ const editBillable = ref(true)
 const editDescription = ref('')
 const isSavingEdit = ref(false)
 
-let timerInterval: ReturnType<typeof setInterval> | null = null
-
-const formattedElapsed = computed(() => {
-	const h = Math.floor(elapsedSeconds.value / 3600)
-	const m = Math.floor((elapsedSeconds.value % 3600) / 60)
-	const s = elapsedSeconds.value % 60
-	return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-})
+const isThisTaskRunning = computed(() =>
+	timerStore.isRunning && timerStore.activeTimer?.taskId === props.taskId,
+)
 
 const totalDuration = computed(() => {
 	return timeEntries.value.reduce((sum, e) => sum + (e.duration || 0), 0)
@@ -360,23 +354,6 @@ function formatDate(date: Date): string {
 	return formatDateShort(date)
 }
 
-function startTicking() {
-	if (timerInterval) clearInterval(timerInterval)
-	timerInterval = setInterval(() => {
-		if (activeEntry.value?.start) {
-			elapsedSeconds.value = Math.floor((Date.now() - new Date(activeEntry.value.start).getTime()) / 1000)
-		}
-	}, 1000)
-}
-
-function stopTicking() {
-	if (timerInterval) {
-		clearInterval(timerInterval)
-		timerInterval = null
-	}
-	elapsedSeconds.value = 0
-}
-
 async function loadEntries() {
 	if (!props.taskId) return
 	try {
@@ -387,33 +364,17 @@ async function loadEntries() {
 	}
 }
 
-async function checkActiveTimer() {
-	if (!props.taskId) return
-	try {
-		const timer = await getActiveTimer()
-		if (timer && timer.taskId === props.taskId) {
-			activeEntry.value = timer
-			isRunning.value = true
-			timerBillable.value = timer.billable
-			timerDescription.value = timer.description || ''
-			startTicking()
-		} else {
-			isRunning.value = false
-			activeEntry.value = null
-			stopTicking()
-		}
-	} catch {
-		// Silently fail
+function syncFromStore() {
+	if (timerStore.isRunning && timerStore.activeTimer?.taskId === props.taskId) {
+		timerBillable.value = timerStore.activeTimer.billable
+		timerDescription.value = timerStore.activeTimer.description || ''
 	}
 }
 
 async function start() {
 	isStarting.value = true
 	try {
-		const entry = await startTimer(props.taskId, timerBillable.value, timerDescription.value)
-		activeEntry.value = entry
-		isRunning.value = true
-		startTicking()
+		await timerStore.startTimer(props.taskId, timerBillable.value, timerDescription.value)
 		success({message: t('task.timeTracking.started')})
 	} catch (e) {
 		error(e)
@@ -425,10 +386,7 @@ async function start() {
 async function stop() {
 	isStopping.value = true
 	try {
-		await stopTimer(props.taskId, timerBillable.value, timerDescription.value)
-		isRunning.value = false
-		activeEntry.value = null
-		stopTicking()
+		await timerStore.stopTimer(props.taskId, timerBillable.value, timerDescription.value)
 		timerDescription.value = ''
 		timerBillable.value = true
 		await loadEntries()
@@ -534,16 +492,12 @@ async function deleteEntry(entry: ITimeEntry) {
 
 watch(() => props.taskId, () => {
 	loadEntries()
-	checkActiveTimer()
+	syncFromStore()
 })
 
 onMounted(() => {
 	loadEntries()
-	checkActiveTimer()
-})
-
-onUnmounted(() => {
-	stopTicking()
+	syncFromStore()
 })
 </script>
 
